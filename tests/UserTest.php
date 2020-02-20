@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Assert;
 
 require __DIR__ . "/../src/Entity/Game.php";
 require __DIR__ . "/../src/Entity/Rating.php";
@@ -26,5 +27,28 @@ class UserTest extends TestCase
 
     public function testRatingsByGenre_With1ZombieAnd1Shooter_Returns1Zombie()
     {
+        $zombiesGame = $this->createMock(Game::class);
+        $zombiesGame->method('getGenreCode')->willReturn('zombies');
+
+        $shooterGame = $this->createMock(Game::class);
+        $shooterGame->method('getGenreCode')->willReturn('shooter');
+
+        $rating1 = $this->createMock(Rating::class);
+        $rating1->method('getGame')->willReturn($zombiesGame);
+
+        $rating2 = $this->createMock(Rating::class);
+        $rating2->method('getGame')->willReturn($shooterGame);
+
+        $user = $this->getMockBuilder(User::class)
+            ->setMethods(array('getRatings'))
+            ->getMock();
+        $user->method('getRatings')->willReturn([$rating1, $rating2]);
+
+        $ratings = $user->findRatingsByGenre('zombies');
+
+        $this->assertCount(1, $ratings);
+        foreach($ratings as $rating){
+            $this->assertEquals($rating->getGame()->getGenreCode(), 'zombies');
+        }
     }
 }
